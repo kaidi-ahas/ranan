@@ -1,0 +1,1 @@
+the goal is to have a tool that takes in sheet music, I sing it in and it gives me feedback.
