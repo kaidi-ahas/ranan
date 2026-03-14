@@ -8,8 +8,10 @@ func Autocorrelation(frame Frame) Result {
 	bestLag := 0
 
 	maxLag := len(samples) / 2
+	minLag := int(sampleRate / 1000)
 
-	for lag := 1; lag < maxLag; lag++ {
+	for lag := minLag; lag < maxLag; lag++ {
+
 		corr := 0.0
 
 		for i := 0; i < len(samples)-lag; i++ {
