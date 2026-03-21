@@ -1,36 +1,88 @@
 # Ranan
 
-Ranan is a backend service for vocal pitch detection and singing accuracy analysis.
+Ranan is a pitch detection and musical feedback engine written in Go.
 
-The goal of the project is to build an API capable of generating or accepting simple sheet music (a sequence of notes with durations), analyzing sung notes, and providing feedback about pitch accuracy.
+The system captures microphone audio, detects the fundamental frequency, converts it to a musical note, and calculates cent deviation from equal temperament tuning.
 
 ---
 
-## Features (planned)
+## Features
 
-- Generate simple sheet music sequences
-- Accept simple sheet music input
-- Pitch detection
-- Frequency → musical note conversion
-- Cent deviation calculation
-- Singing accuracy feedback
+- Live microphone audio capture
+- Pitch detection via autocorrelation
+- Frequency → MIDI note conversion
+- Note name and octave indentification
+- Cent deviation calculation from equal temperament
+
+---
+
+## Architecture
+```
+cmd/api/          — HTTP server
+cmd/ranan/        — CLI feedback tool
+internal/audio/   — microphone capture
+internal/pitch/   — pitch detection and analysis
+internal/music/   — frequency to note conversion
+```
+
+---
+
+## Requirements
+
+- Go 1.25+
+- PortAudio
+
+Install PortAudio on macOS:
+```bash
+brew install portaudio
+brew install pkg-config
+```
+
+Install PortAudio on Linux:
+```bash
+sudo apt-get install portaudio19-dev
+```
+
+---
+
+## Running the CLI
+```bash
+go run cmd/ranan/main.go
+```
+
+Example output:
+```
+Listening... (Ctrl+C to stop)
+Frequency: 440.00 Hz | Note: A4 | Cents: 0.00
+Frequency: 441.20 Hz | Note: A4 | Cents: 4.71
+Frequency: 438.80 Hz | Note: A4 | Cents: -2.23
+```
+
+Press Ctrl+C to stop.
 
 ---
 
 ## Running the API
+```bash
+go run cmd/api/main.go
+```
 
-Start the server:
-
-`go run ./cmd/api`
-
-The API will run on:
-
-`http://localhost:8080`
+The API runs on:
+```
+http://localhost:8080
+```
 
 Health check:
-
-`GET /health`
+```
+GET /health
+```
 
 Expected response:
+```
+OK
+```
 
-`OK`
+## Running Tests
+```bash
+go test ./...
+```
