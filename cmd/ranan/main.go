@@ -2,29 +2,23 @@ package main
 
 import (
 	"fmt"
-	"math"
+	"log"
 
+	"github.com/kaidi-ahas/ranan/internal/audio"
 	"github.com/kaidi-ahas/ranan/internal/pitch"
 )
 
 func main() {
-	sampleRate := 44100
-	frequency := 440.0
-	frameSize := 2048
+	fmt.Println("Listening...")
 
-	samples := make([]float64, frameSize)
-	for i := 0; i < frameSize; i++ {
-		samples[i] = math.Sin(2 * math.Pi * frequency * float64(i) / float64(sampleRate))
-	}
-
-	frame := pitch.Frame{
-		Samples:    samples,
-		SampleRate: sampleRate,
+	frame, err := audio.CaptureFrame()
+	if err != nil {
+		log.Fatalf("failed to capture audio: %v", err)
 	}
 
 	analysis := pitch.Analyse(frame)
 
 	fmt.Printf("Frequency: %.2f Hz\n", analysis.Pitch.Frequency)
-	fmt.Printf("Note:      %s%d\n", analysis.Note.Name, analysis.Note.Octave)
-	fmt.Printf("Cents:     %.2f\n", analysis.Note.Cents)
+	fmt.Printf("Note:       %s%d\n", analysis.Note.Name, analysis.Note.Octave)
+	fmt.Printf("Cents:      %.2f\n", analysis.Note.Cents)
 }
