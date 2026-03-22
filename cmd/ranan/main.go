@@ -19,23 +19,27 @@ func main() {
 
 	for {
 		select {
-		case <- stop:
+		case <-stop:
 			fmt.Println("\nStopped")
 			return
 		default:
-				frame, err := audio.CaptureFrame()
-				if err != nil {
-					log.Printf("failed to capture audio: %v", err)
-					continue
-				}
+			frame, err := audio.CaptureFrame()
+			if err != nil {
+				log.Printf("failed to capture audio: %v", err)
+				continue
+			}
 
-				analysis := pitch.Analyse(frame)
+			analysis := pitch.Analyse(frame)
 
-				fmt.Printf("Frequency: %.2f Hz | Note: %s%d | Cents: %.2f\n",
-					analysis.Pitch.Frequency,
-					analysis.Note.Name, 
-					analysis.Note.Octave,
-					analysis.Note.Cents,
+			if analysis.Pitch.Frequency == 0.0 {
+				continue
+			}
+
+			fmt.Printf("Frequency: %.2f Hz | Note: %s%d | Cents: %.2f\n",
+				analysis.Pitch.Frequency,
+				analysis.Note.Name,
+				analysis.Note.Octave,
+				analysis.Note.Cents,
 			)
 		}
 	}
