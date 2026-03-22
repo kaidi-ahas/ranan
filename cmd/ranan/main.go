@@ -10,9 +10,13 @@ import (
 	"github.com/kaidi-ahas/ranan/internal/audio"
 	"github.com/kaidi-ahas/ranan/internal/music"
 	"github.com/kaidi-ahas/ranan/internal/pitch"
+	"github.com/kaidi-ahas/ranan/internal/serial"
 )
 
-const bufferSize = 5
+const (
+	bufferSize = 5
+	arduinoPort = "/dev/cu.usbmodem11301"
+)
 
 func main() {
 	fmt.Println("Listening... (Ctrl+C to stop)")
@@ -22,6 +26,12 @@ func main() {
 		log.Fatalf("failed to open microphone: %v", err)
 	}
 	defer mic.Close()
+
+	port, err := serial.Open(arduinoPort)
+	if err != nil {
+		log.Fatalf("failed to open serial port: %v", err)
+	}
+	defer port.Close()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
@@ -60,6 +70,11 @@ func main() {
 				note.Octave,
 				note.Cents,
 			)
+
+			err = port.Send(note.Name, note.Octave, note.Cents)
+			if err != nil {
+				log.Printf("failed to send to Arduino: %v", err)
+			}
 		}
 	}
 }
