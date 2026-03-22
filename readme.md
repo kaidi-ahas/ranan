@@ -10,6 +10,7 @@ The system captures microphone audio, detects the fundamental frequency, convert
 
 - Live microphone audio capture
 - Pitch detection via autocorrelation
+- Frame buffering for stable pitch readings
 - Frequency → MIDI note conversion
 - Note name and octave indentification
 - Cent deviation calculation from equal temperament

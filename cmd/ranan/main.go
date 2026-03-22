@@ -8,34 +8,57 @@ import (
 	"syscall"
 
 	"github.com/kaidi-ahas/ranan/internal/audio"
+	"github.com/kaidi-ahas/ranan/internal/music"
 	"github.com/kaidi-ahas/ranan/internal/pitch"
 )
+
+const bufferSize = 5
 
 func main() {
 	fmt.Println("Listening... (Ctrl+C to stop)")
 
+	mic, err := audio.NewMicrophone()
+	if err != nil {
+		log.Fatalf("failed to open microphone: %v", err)
+	}
+	defer mic.Close()
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 
+	buf := pitch.NewBuffer(bufferSize)
+
 	for {
 		select {
-		case <- stop:
+		case <-stop:
 			fmt.Println("\nStopped")
 			return
 		default:
-				frame, err := audio.CaptureFrame()
-				if err != nil {
-					log.Printf("failed to capture audio: %v", err)
-					continue
-				}
+			frame, err := mic.Read()
+			if err != nil {
+				log.Printf("failed to read audio: %v", err)
+				continue
+			}
 
-				analysis := pitch.Analyse(frame)
+			result := pitch.Autocorrelation(frame)
+			if result.Frequency == 0.0 {
+				continue
+			}
 
-				fmt.Printf("Frequency: %.2f Hz | Note: %s%d | Cents: %.2f\n",
-					analysis.Pitch.Frequency,
-					analysis.Note.Name, 
-					analysis.Note.Octave,
-					analysis.Note.Cents,
+			buf.Add(result)
+
+			avgFreq := buf.Average()
+			if avgFreq == 0.0 {
+				continue
+			}
+
+			note := music.FromFrequency(avgFreq)
+
+			fmt.Printf("Frequency: %.2f Hz | Note: %s%d | Cents: %.2f\n",
+				note.Frequency,
+				note.Name,
+				note.Octave,
+				note.Cents,
 			)
 		}
 	}

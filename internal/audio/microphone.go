@@ -10,43 +10,57 @@ const (
 	frameSize  = 2048
 )
 
-func CaptureFrame() (pitch.Frame, error) {
-	samples := make([]float32, frameSize)
+type Microphone struct {
+	stream *portaudio.Stream
+	samples []float32
+}
 
+func NewMicrophone() (*Microphone, error) {
 	err := portaudio.Initialize()
 	if err != nil {
-		return pitch.Frame{}, err
+		return nil, err
 	}
-	defer portaudio.Terminate()
+
+	samples := make([]float32, frameSize)
 
 	stream, err := portaudio.OpenDefaultStream(1, 0, sampleRate, frameSize, samples)
 	if err != nil {
-		return pitch.Frame{}, err
+		portaudio.Terminate()
+		return nil, err
 	}
-	defer stream.Close()
 
 	err = stream.Start()
 	if err != nil {
-		return pitch.Frame{}, err
+		stream.Close()
+		portaudio.Terminate()
+		return nil, err
 	}
 
-	err = stream.Read()
-	if err != nil {
-		return pitch.Frame{}, err
-	}
+	return &Microphone{
+		stream: stream,
+		samples: samples,
+	}, nil
+}
 
-	err = stream.Stop()
+func (m *Microphone) Read() (pitch.Frame, error) {
+	err := m.stream.Read()
 	if err != nil {
 		return pitch.Frame{}, err
 	}
 
 	converted := make([]float64, frameSize)
-	for i, s := range samples {
+	for i, s := range m.samples {
 		converted[i] = float64(s)
 	}
 
 	return pitch.Frame{
-		Samples:    converted,
+		Samples: converted,
 		SampleRate: sampleRate,
 	}, nil
+}
+
+func (m *Microphone) Close() {
+	m.stream.Stop()
+	m.stream.Close()
+	portaudio.Terminate()
 }
