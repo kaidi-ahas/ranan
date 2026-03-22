@@ -14,6 +14,7 @@ The system captures microphone audio, detects the fundamental frequency, convert
 - Frequency → MIDI note conversion
 - Note name and octave indentification
 - Cent deviation calculation from equal temperament
+- Serial communication to Arduino for hardware LED tuner display
 
 ---
 
@@ -43,6 +44,25 @@ Install PortAudio on Linux:
 ```bash
 sudo apt-get install portaudio19-dev
 ```
+
+---
+
+## Arduino Setup
+
+The CLI can send pitch data to an Arduino over USB serial.
+
+The Arduino receives messages in this format:
+```
+A4,0.79
+```
+
+Where the first part is the note name and octave, and the second part is the cent deviation.
+
+To use this feature:
+1. Connect Arduino UNO to your Mac via USB
+2. Upload the Arduino firmware (see arduino/ directory)
+3. Confirm the port name with: `ls /dev/cu.*`
+4. Update the `arduinoPort` constant in `cmd/ranan/main.go`
 
 ---
 
