@@ -15,6 +15,7 @@ The system captures microphone audio, detects the fundamental frequency, convert
 - Note name and octave indentification
 - Cent deviation calculation from equal temperament
 - Serial communication to Arduino for hardware LED tuner display
+- Tuner mode with sequential note input and in-place display
 
 ---
 
@@ -82,6 +83,32 @@ Frequency: 438.80 Hz | Note: A4 | Cents: -2.23
 Press Ctrl+C to stop.
 
 ---
+
+## Tuner Mode
+
+To enable tuner mode, pass the `--tuner` flag:
+```
+go run cmd/ranan/main.go --tuner
+```
+
+The program will prompt for a target note, then listen and display cent deviation from that target in real time on a single updating line:
+```
+Target: A4 | Frequency: 441.20 Hz | Cents: +4.71
+```
+
+When the pitch is within threshold, the program confirms:
+```
+Note A4 is in tune. Press Enter to confirm and continue.
+```
+
+To use a custom threshold in cents:
+```
+go run cmd/ranan/main.go --tuner --threshold=5
+```
+
+Default threshold is 10 cents.
+
+To quit, type `q` at the note prompt and press Enter.
 
 ## Running the API
 ```bash
