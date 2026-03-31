@@ -68,5 +68,30 @@ func TestToFrequency_UnknownNote(t *testing.T) {
 	}
 }
 
+func TestCentsBetween_Unison(t *testing.T) {
+	cents := CentsBetween(440.0, 880.0)
+	if math.Abs(cents-1200.0) > 0.01 {
+		t.Errorf("expected 1200 cents for one octave, got %.2f", cents)
+	}
+}
 
+func TestTuningStatus_Flat(t *testing.T) {
+	status := TuningStatus(-15.0, 10.0)
+	if status != "flat" {
+		t.Errorf("expected flat, got %s", status)
+	}
+}
 
+func TestTuningStatus_InTune(t *testing.T) {
+	status := TuningStatus(3.0, 10.0)
+	if status != "intune" {
+		t.Errorf("expected intune, got %s", status)
+	}
+}
+
+func TestTuningStatus_Sharp(t *testing.T) {
+	status := TuningStatus(15.0, 10.0)
+	if status != "sharp" {
+		t.Errorf("expected sharp, got %s", status)
+	}
+}

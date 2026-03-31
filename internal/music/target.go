@@ -49,3 +49,17 @@ func ToFrequency (name string, octave int) (float64, error) {
 
 	return freq, nil
 }
+
+func CentsBetween(detected, target float64) float64 {
+	return 1200.0 * math.Log2(target/detected)
+}
+
+func TuningStatus(cents, threshold float64) string {
+	if cents < -threshold {
+		return "flat"
+	}
+	if cents > threshold {
+		return "sharp"
+	}
+	return "intune"
+}

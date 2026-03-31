@@ -21,18 +21,17 @@ void loop() {
             return;
         }
 
-        String noteStr = message.substring(0, commaIndex);
-        float cents    = message.substring(commaIndex + 1).toFloat();
+        String status = message.substring(commaIndex +1);
 
         digitalWrite(PIN_LED_LEFT,  LOW);
         digitalWrite(PIN_LED_GREEN, LOW);
         digitalWrite(PIN_LED_RIGHT, LOW);
 
-        if (cents < -TUNE_THRESHOLD) {
+        if (status == "flat") {
             digitalWrite(PIN_LED_LEFT, HIGH);
-        } else if (cents > TUNE_THRESHOLD) {
+        } else if (status == "sharp") {
             digitalWrite(PIN_LED_RIGHT, HIGH);
-        } else {
+        } else if (status == "intune") {
             digitalWrite(PIN_LED_GREEN, HIGH);
         }
     }

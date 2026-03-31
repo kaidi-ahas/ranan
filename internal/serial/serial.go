@@ -2,13 +2,15 @@ package serial
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/tarm/serial"
 )
 
 
 type Port struct {
-	port *serial.Port
+	writer io.Writer
+	closer io.Closer
 }
 
 func Open(device string) (*Port, error) {
@@ -22,13 +24,13 @@ func Open(device string) (*Port, error) {
 		return nil, fmt.Errorf("failed to open serial port %s: %w", device, err)
 	}
 
-	return &Port{port: port}, nil
+	return &Port{writer: port, closer: port}, nil
 }
 
-func (p *Port) Send(note string, octave int, cents float64) error {
-	message := fmt.Sprintf("%s%d, %.2f\n", note, octave, cents)
+func (p *Port) Send(note string, octave int, status string) error {
+	message := fmt.Sprintf("%s%d,%s\n", note, octave, status)
 
-	_, err := p.port.Write([]byte(message))
+	_, err := p.writer.Write([]byte(message))
 	if err != nil {
 		return fmt.Errorf("failed to write to serial port: %w", err)
 	}
@@ -37,5 +39,5 @@ func (p *Port) Send(note string, octave int, cents float64) error {
 }
 
 func (p *Port) Close() error {
-	return p.port.Close()
+	return p.closer.Close()
 }
