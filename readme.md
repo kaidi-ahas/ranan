@@ -1,8 +1,8 @@
 # Ranan
 
-Ranan is a pitch detection and musical feedback engine written in Go.
+Ranan is a pitch detection, musical feedback, and tuning engine written in Go.
 
-The system captures microphone audio, detects the fundamental frequency, converts it to a musical note, and calculates cent deviation from equal temperament tuning.
+The system captures microphone audio, detects the fundamental frequency, converts it to a musical note, calculates cent deviation from equal temperament tuning, and provides real-time feedback via CLI and Arduino LED indicator.
 
 ---
 
@@ -14,18 +14,22 @@ The system captures microphone audio, detects the fundamental frequency, convert
 - Frequency → MIDI note conversion
 - Note name and octave indentification
 - Cent deviation calculation from equal temperament
-- Serial communication to Arduino for hardware LED tuner display
 - Tuner mode with sequential note input and in-place display
+- Serial communication to Arduino for hardware LED tuner display
+- Auto-detection of Arduino serial port
+
 
 ---
 
 ## Architecture
 ```
 cmd/api/          — HTTP server
-cmd/ranan/        — CLI feedback tool
+cmd/ranan/        — CLI tuner and feedback tool
 internal/audio/   — microphone capture
 internal/pitch/   — pitch detection and analysis
-internal/music/   — frequency to note conversion
+internal/music/   — frequency to note conversion and tuning logic
+internal/serial   — Arduino serial communication
+arduino/tuner/    - Arduino LED tuner firmware
 ```
 
 ---
@@ -50,26 +54,42 @@ sudo apt-get install portaudio19-dev
 
 ## Arduino Setup
 
-The CLI can send pitch data to an Arduino over USB serial.
+Connect an Arduino UNO via USB and upload the firmware from `arduino/tuner/tuner.ino` using Arduino IDE.
+
+The CLI auto-detects the Arduino port on startup:
+```
+Arduino detected on /dev/cu.usbmodem11301
+```
+
+To override the detected port use the `--port` flag:
+```
+go run cmd/ranan/main.go --port=/dev/usbmodem11301
+```
+
+If no Arduino is connected, serial is disabled automatically and the program continues without it.
 
 The Arduino receives messages in this format:
 ```
-A4,0.79
+A4,intune
+A4,flat
+A4,sharp
 ```
 
-Where the first part is the note name and octave, and the second part is the cent deviation.
+### LED behavior
 
-To use this feature:
-1. Connect Arduino UNO to your Mac via USB
-2. Upload the Arduino firmware (see arduino/ directory)
-3. Confirm the port name with: `ls /dev/cu.*`
-4. Update the `arduinoPort` constant in `cmd/ranan/main.go`
+| Status | LED |
+|--------|-----|
+| flat (cents < −threshold) | Left red LED |
+| intune (within threshold) | Green LED |
+| sharp (cents > +threshold) | Right red LED |
 
 ---
 
 ## Running the CLI
+
+Free-running mode - detects and displays whatever note is played:
 ```bash
-go run cmd/ranan/main.go
+go run ./cmd/ranan/
 ```
 
 Example output:
@@ -86,12 +106,12 @@ Press Ctrl+C to stop.
 
 ## Tuner Mode
 
-To enable tuner mode, pass the `--tuner` flag:
+Tuner mode prompts for a target note and gives real-time feedback against it:
 ```
 go run cmd/ranan/main.go --tuner
 ```
 
-The program will prompt for a target note, then listen and display cent deviation from that target in real time on a single updating line:
+The program updates a single line in place:
 ```
 Target: A4 | Frequency: 441.20 Hz | Cents: +4.71
 ```
@@ -106,29 +126,10 @@ To use a custom threshold in cents:
 go run cmd/ranan/main.go --tuner --threshold=5
 ```
 
-Default threshold is 10 cents.
+Default threshold is 10 cents. The Arduino LEDs reflect the same threshold as the CLI.
 
 To quit, type `q` at the note prompt and press Enter.
 
-## Running the API
-```bash
-go run cmd/api/main.go
-```
-
-The API runs on:
-```
-http://localhost:8080
-```
-
-Health check:
-```
-GET /health
-```
-
-Expected response:
-```
-OK
-```
 
 ## Running Tests
 ```bash
